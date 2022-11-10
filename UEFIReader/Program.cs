@@ -4,9 +4,8 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
-            UEFI uefi = new(File.ReadAllBytes(@"C:\Users\Gus\Downloads\xbl_a_PhysicalPart_1_31_05_2022_21_40_53.bin"));
-            Console.WriteLine(uefi.EFIs.Count);
+            UEFI uefi = new(File.ReadAllBytes(@"C:\Users\Gus\Downloads\BMRs\ota_b1-12-customer_gen_2022.815.152\xbl.img"));
+            uefi.ExtractUEFI(@"F:\TestUEFIReader");
         }
     }
 }
