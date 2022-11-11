@@ -2,7 +2,7 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Arcata.img")).ExtractUEFI(@"F:\TestUEFIReader\Arcata");
             new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\BlackRock.img")).ExtractUEFI(@"F:\TestUEFIReader\BlackRock");

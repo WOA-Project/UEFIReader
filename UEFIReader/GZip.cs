@@ -18,23 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Text;
-using System.Threading;
 
 namespace UEFIReader
 {
     internal static class GZip
     {
-        internal static byte[] Decompress(byte[] Input, UInt32 Offset, UInt32 InputSize)
+        internal static byte[] Decompress(byte[] Input, uint Offset, uint InputSize)
         {
             MemoryStream InStream = new(Input, (int)Offset, (int)InputSize);
             MemoryStream OutStream = new();
 
-            GZipStream GZipStream = new GZipStream(InStream, CompressionMode.Decompress, false);
+            GZipStream GZipStream = new(InStream, CompressionMode.Decompress, false);
 
             GZipStream.CopyTo(OutStream);
 
@@ -49,12 +44,12 @@ namespace UEFIReader
             return Output;
         }
 
-        internal static byte[] Compress(byte[] Input, UInt32 Offset, UInt32 InputSize)
+        internal static byte[] Compress(byte[] Input, uint Offset, uint InputSize)
         {
             MemoryStream InStream = new(Input, (int)Offset, (int)InputSize);
             MemoryStream OutStream = new();
 
-            GZipStream GZipStream = new GZipStream(InStream, CompressionMode.Compress, false);
+            GZipStream GZipStream = new(InStream, CompressionMode.Compress, false);
 
             GZipStream.CopyTo(OutStream);
 

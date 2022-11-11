@@ -1,6 +1,5 @@
 // CommandLineParser.cs
 
-using System;
 using System.Collections;
 
 namespace SevenZip.CommandLineParser
@@ -101,7 +100,7 @@ namespace SevenZip.CommandLineParser
                         continue;
                     }
 
-                    if (String.Compare(switchForms[switchIndex].IDString, 0,
+                    if (string.Compare(switchForms[switchIndex].IDString, 0,
                             srcString, pos, switchLen, true) == 0)
                     {
                         matchedSwitchIndex = switchIndex;
@@ -181,10 +180,10 @@ namespace SevenZip.CommandLineParser
 
                             if (type == SwitchType.UnLimitedPostString)
                             {
-                                matchedSwitch.PostStrings.Add(srcString[pos..]);
+                                _ = matchedSwitch.PostStrings.Add(srcString[pos..]);
                                 return true;
                             }
-                            String stringSwitch = srcString.Substring(pos, minLen);
+                            string stringSwitch = srcString.Substring(pos, minLen);
                             pos += minLen;
                             for (int i = minLen; i < switchForm.MaxLen && pos < len; i++, pos++)
                             {
@@ -196,7 +195,7 @@ namespace SevenZip.CommandLineParser
 
                                 stringSwitch += c;
                             }
-                            matchedSwitch.PostStrings.Add(stringSwitch);
+                            _ = matchedSwitch.PostStrings.Add(stringSwitch);
                             break;
                         }
                 }
@@ -213,7 +212,7 @@ namespace SevenZip.CommandLineParser
                 string s = commandStrings[i];
                 if (stopSwitch)
                 {
-                    NonSwitchStrings.Add(s);
+                    _ = NonSwitchStrings.Add(s);
                 }
                 else
                     if (s == kStopSwitchParsing)
@@ -223,12 +222,12 @@ namespace SevenZip.CommandLineParser
                 else
                     if (!ParseString(s, switchForms))
                 {
-                    NonSwitchStrings.Add(s);
+                    _ = NonSwitchStrings.Add(s);
                 }
             }
         }
 
-        public SwitchResult this[int index] { get { return _switches[index]; } }
+        public SwitchResult this[int index] => _switches[index];
 
         public static int ParseCommand(CommandForm[] commandForms, string commandString,
             out string postString)
@@ -290,7 +289,7 @@ namespace SevenZip.CommandLineParser
                     return false;
                 }
 
-                indices.Add(currentIndex);
+                _ = indices.Add(currentIndex);
             }
             return numUsedChars == commandString.Length;
         }
@@ -302,7 +301,7 @@ namespace SevenZip.CommandLineParser
 
         private static bool IsItSwitchChar(char c)
         {
-            return c == kSwitchID1 || c == kSwitchID2;
+            return c is kSwitchID1 or kSwitchID2;
         }
     }
 

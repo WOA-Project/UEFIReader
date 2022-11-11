@@ -11,10 +11,10 @@ namespace UEFIReader
             {
                 if (i != Bytes.GetLowerBound(0))
                 {
-                    s.Append(Separator);
+                    _ = s.Append(Separator);
                 }
 
-                s.Append(Bytes[i].ToString("X2"));
+                _ = s.Append(Bytes[i].ToString("X2"));
             }
             return s.ToString();
         }

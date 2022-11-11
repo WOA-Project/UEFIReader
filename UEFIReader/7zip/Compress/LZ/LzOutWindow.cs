@@ -4,11 +4,11 @@ namespace SevenZip.Compression.LZ
 {
     public class OutWindow
     {
-        private byte[] _buffer = null;
+        private byte[]? _buffer = null;
         private uint _pos;
         private uint _windowSize = 0;
         private uint _streamPos;
-        private System.IO.Stream _stream;
+        private System.IO.Stream? _stream;
 
         public uint TrainSize = 0;
 

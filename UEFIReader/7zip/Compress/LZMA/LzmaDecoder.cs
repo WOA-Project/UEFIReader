@@ -1,12 +1,9 @@
 // LzmaDecoder.cs
 
-using System;
+using SevenZip.Compression.RangeCoder;
 
 namespace SevenZip.Compression.LZMA
 {
-    using RangeCoder;
-    using System.Threading;
-
     public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
     {
         private class LenDecoder
@@ -69,7 +66,9 @@ namespace SevenZip.Compression.LZMA
             {
                 private BitDecoder[] m_Decoders;
                 public void Create() { m_Decoders = new BitDecoder[0x300]; }
-                public void Init() { for (int i = 0; i < 0x300; i++)
+                public void Init()
+                {
+                    for (int i = 0; i < 0x300; i++)
                     {
                         m_Decoders[i].Init();
                     }
@@ -110,7 +109,7 @@ namespace SevenZip.Compression.LZMA
                 }
             }
 
-            private Decoder2[] m_Coders;
+            private Decoder2[]? m_Coders;
             private int m_NumPrevBits;
             private int m_NumPosBits;
             private uint m_PosMask;
@@ -264,7 +263,7 @@ namespace SevenZip.Compression.LZMA
         }
 
         public void Code(System.IO.Stream inStream, System.IO.Stream outStream,
-            Int64 inSize, Int64 outSize, ICodeProgress progress, CancellationToken? token = null)
+            long inSize, long outSize, ICodeProgress progress, CancellationToken? token = null)
         {
             Init(inStream, outStream);
 
@@ -272,8 +271,8 @@ namespace SevenZip.Compression.LZMA
             state.Init();
             uint rep0 = 0, rep1 = 0, rep2 = 0, rep3 = 0;
 
-            UInt64 nowPos64 = 0;
-            UInt64 outSize64 = (UInt64)outSize;
+            ulong nowPos64 = 0;
+            ulong outSize64 = (ulong)outSize;
             if (nowPos64 < outSize64)
             {
                 if (m_IsMatchDecoders[state.Index << Base.kNumPosStatesBitsMax].Decode(m_RangeDecoder) != 0)
@@ -327,7 +326,7 @@ namespace SevenZip.Compression.LZMA
                                 }
                                 else
                                 {
-                                    UInt32 distance;
+                                    uint distance;
                                     if (m_IsRepG1Decoders[state.Index].Decode(m_RangeDecoder) == 0)
                                     {
                                         distance = rep1;
@@ -420,10 +419,10 @@ namespace SevenZip.Compression.LZMA
                 throw new InvalidParamException();
             }
 
-            UInt32 dictionarySize = 0;
+            uint dictionarySize = 0;
             for (int i = 0; i < 4; i++)
             {
-                dictionarySize += ((UInt32)properties[1 + i]) << (i * 8);
+                dictionarySize += ((uint)properties[1 + i]) << (i * 8);
             }
 
             SetDictionarySize(dictionarySize);

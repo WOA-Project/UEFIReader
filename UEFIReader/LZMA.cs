@@ -22,24 +22,19 @@
 // Usage: http://stackoverflow.com/questions/7646328/how-to-use-the-7z-sdk-to-compress-and-decompress-a-file
 
 using SevenZip;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Text;
-using System.Threading;
-using UEFIReader;
 
 namespace UEFIReader
 {
     internal static class LZMA
     {
-        internal static byte[] Decompress(byte[] Input, UInt32 Offset, UInt32 InputSize)
+        internal static byte[] Decompress(byte[] Input, uint Offset, uint InputSize)
         {
             byte[] Properties = new byte[5];
             Buffer.BlockCopy(Input, (int)Offset, Properties, 0, 5);
 
-            UInt64 OutputSize = ByteOperations.ReadUInt64(Input, Offset + 5);
+            ulong OutputSize = ByteOperations.ReadUInt64(Input, Offset + 5);
 
             SevenZip.Compression.LZMA.Decoder Coder = new();
             Coder.SetDecoderProperties(Properties);
@@ -49,7 +44,7 @@ namespace UEFIReader
             byte[] Output = new byte[OutputSize];
             MemoryStream OutStream = new(Output, true);
 
-            Coder.Code(InStream, OutStream, (Int64)InputSize - 0x0D, (Int64)OutputSize, null);
+            Coder.Code(InStream, OutStream, (long)InputSize - 0x0D, (long)OutputSize, null);
 
             OutStream.Flush();
             OutStream.Close();
@@ -58,7 +53,7 @@ namespace UEFIReader
             return Output;
         }
 
-        internal static byte[] Compress(byte[] Input, UInt32 Offset, UInt32 InputSize)
+        internal static byte[] Compress(byte[] Input, uint Offset, uint InputSize)
         {
             SevenZip.Compression.LZMA.Encoder Coder = new();
 
@@ -87,8 +82,8 @@ namespace UEFIReader
 
     public class LZMACompressionStream : Stream
     {
-        private readonly SevenZip.Compression.LZMA.Encoder Encoder = null;
-        private readonly SevenZip.Compression.LZMA.Decoder Decoder = null;
+        private readonly SevenZip.Compression.LZMA.Encoder? Encoder = null;
+        private readonly SevenZip.Compression.LZMA.Decoder? Decoder = null;
         private readonly PumpStream BufferStream;
         private readonly Stream stream;
         private readonly bool LeaveOpen;
@@ -122,7 +117,7 @@ namespace UEFIReader
             else
             {
                 byte[] DecoderProperties = new byte[5];
-                stream.Read(DecoderProperties, 0, 5);
+                _ = stream.Read(DecoderProperties, 0, 5);
                 Decoder = new SevenZip.Compression.LZMA.Decoder();
                 Decoder.SetDecoderProperties(DecoderProperties);
                 WorkThread = new Thread(new ThreadStart(Decode));
@@ -178,12 +173,12 @@ namespace UEFIReader
             BufferStream.Write(buffer, offset, count);
         }
 
-        public override bool CanRead { get { return Decoder != null; } }
-        public override bool CanSeek { get { return false; } }
-        public override bool CanWrite { get { return Encoder != null; } }
+        public override bool CanRead => Decoder != null;
+        public override bool CanSeek => false;
+        public override bool CanWrite => Encoder != null;
         public override void Flush() { }
-        public override long Length { get { return 0; } }
-        public override long Position { get { return 0; } set { } }
+        public override long Length => 0;
+        public override long Position { get => 0; set { } }
         public override long Seek(long offset, SeekOrigin origin) { return 0; }
         public override void SetLength(long value) { }
     }
@@ -243,7 +238,7 @@ namespace UEFIReader
                         {
                             Array.Copy(b, BufferOffset, buffer, offset + BytesRead, b.Length - BufferOffset);
 
-                            BufferQueue.Dequeue();
+                            _ = BufferQueue.Dequeue();
                             BufferSize -= b.Length;
                             Monitor.Pulse(BufferQueue);
 
@@ -301,12 +296,12 @@ namespace UEFIReader
 
         public override int ReadTimeout { get; set; }
         public override int WriteTimeout { get; set; }
-        public override bool CanRead { get { return true; } }
-        public override bool CanSeek { get { return false; } }
-        public override bool CanWrite { get { return true; } }
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
         public override void Flush() { }
-        public override long Length { get { return 0; } }
-        public override long Position { get { return 0; } set { } }
+        public override long Length => 0;
+        public override long Position { get => 0; set { } }
         public override long Seek(long offset, SeekOrigin origin) { return 0; }
         public override void SetLength(long value) { }
     }

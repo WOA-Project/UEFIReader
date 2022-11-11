@@ -1,14 +1,12 @@
-using System;
-
 namespace SevenZip.Compression.RangeCoder
 {
     internal class Encoder
     {
         public const uint kTopValue = 1 << 24;
 
-        private System.IO.Stream Stream;
+        private System.IO.Stream? Stream;
 
-        public UInt64 Low;
+        public ulong Low;
         public uint Range;
         private uint _cacheSize;
         private byte _cache;
@@ -132,7 +130,7 @@ namespace SevenZip.Compression.RangeCoder
         public uint Range;
         public uint Code;
         // public Buffer.InBuffer Stream = new Buffer.InBuffer(1 << 16);
-        public System.IO.Stream Stream;
+        public System.IO.Stream? Stream;
 
         public void Init(System.IO.Stream stream)
         {
