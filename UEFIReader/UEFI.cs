@@ -334,7 +334,7 @@ namespace UEFIReader
 
         internal string[] TryGetFilePath(byte[] Data)
         {
-            Regex regex = new Regex("[a-zA-Z/0-9_\\-\\.]*\\.dll\\b");
+            Regex regex = new Regex("[a-zA-Z/\\\\0-9_\\-\\.]*\\.dll\\b");
             var results = regex.Matches(System.Text.Encoding.ASCII.GetString(Data)).Select(x => x.Value).ToArray();
 
             if (!results.Any())
@@ -346,7 +346,7 @@ namespace UEFIReader
                 Console.WriteLine("Unexpected: More than one dll path matched for binary. Is this illegal?");
             }
 
-            return results;
+            return results.Select(s => s.Replace("\\", "/").Replace("WIN", "LINUX")).ToArray();
         }
 
         internal EFI[] HandleVolumeImage(byte[] Input, UInt32 Offset)
@@ -383,7 +383,17 @@ namespace UEFIReader
 
             do
             {
+                if (Offset + 0x18 > Input.Length)
+                {
+                    return fileElements.ToArray();
+                }
+
                 (byte FileType, uint FileSize, Guid FileGuid) = ReadFileMetadata(Input, Offset);
+
+                if (Offset + FileSize > Input.Length)
+                {
+                    return fileElements.ToArray();
+                }
 
                 switch (FileType)
                 {
@@ -504,8 +514,14 @@ namespace UEFIReader
 
             do
             {
+                if (Offset + 0x04 > Input.Length)
+                {
+                    return fileElements.ToArray();
+                }
+
                 (uint SectionSize, byte SectionType) = ReadSectionMetadata(Input, Offset);
-                if (SectionSize > Input.Length)
+
+                if (Offset + SectionSize > Input.Length)
                 {
                     return fileElements.ToArray();
                 }
@@ -515,7 +531,11 @@ namespace UEFIReader
                     case 0x02: // EFI_SECTION_GUID_DEFINED
                         {
                             Debug.WriteLine("EFI_SECTION_GUID_DEFINED");
-                            fileElements.AddRange(ParseGuidDefinedSection(Input, Offset, Base));
+                            try
+                            {
+                                fileElements.AddRange(ParseGuidDefinedSection(Input, Offset, Base));
+                            }
+                            catch { }
                             break;
                         }
                     case 0x10: // EFI_SECTION_PE32
