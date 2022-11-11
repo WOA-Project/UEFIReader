@@ -4,14 +4,25 @@
     {
         private static void Main(string[] args)
         {
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Arcata.img")).ExtractUEFI(@"F:\TestUEFIReader\Arcata");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\BlackRock.img")).ExtractUEFI(@"F:\TestUEFIReader\BlackRock");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Cambria.img")).ExtractUEFI(@"F:\TestUEFIReader\Cambria");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Carina.img")).ExtractUEFI(@"F:\TestUEFIReader\Carina");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Epsilon.img")).ExtractUEFI(@"F:\TestUEFIReader\Epsilon");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Zeta.img")).ExtractUEFI(@"F:\TestUEFIReader\Zeta");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Caspar.img")).ExtractUEFI(@"F:\TestUEFIReader\Caspar");
-            new UEFI(File.ReadAllBytes(@"F:\TestUEFIReader\Sydney.img")).ExtractUEFI(@"F:\TestUEFIReader\Sydney");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Arcata.img", @"F:\TestUEFIReader\Arcata");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\BlackRock.img", @"F:\TestUEFIReader\BlackRock");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Cambria.img", @"F:\TestUEFIReader\Cambria");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Carina.img", @"F:\TestUEFIReader\Carina");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Epsilon.img", @"F:\TestUEFIReader\Epsilon");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Zeta.img", @"F:\TestUEFIReader\Zeta");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Caspar.img", @"F:\TestUEFIReader\Caspar");
+            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Sydney.img", @"F:\TestUEFIReader\Sydney");
+        }
+
+        private static void ExtractQualcommUEFIImage(string UEFIPath, string Output)
+        {
+            UEFI uefi = new(File.ReadAllBytes(UEFIPath));
+            if (!string.IsNullOrEmpty(uefi.BuildId))
+            {
+                Output = Path.Combine(Output, uefi.BuildId);
+            }
+
+            uefi.ExtractUEFI(Output);
         }
     }
 }

@@ -48,6 +48,7 @@ namespace UEFIReader
 
         internal HashSet<Guid> LoadPriority = new();
 
+        internal string BuildId = "";
 
         internal UEFI(byte[] UefiBinary)
         {
@@ -55,6 +56,12 @@ namespace UEFIReader
             uint VolumeHeaderOffset = Offset == null ? throw new BadImageFormatException() : (uint)Offset - 0x28;
 
             EFIs.AddRange(HandleVolumeImage(UefiBinary, VolumeHeaderOffset));
+
+            var buildIds = TryGetBuildPath(UefiBinary);
+            if (buildIds.Count() > 0)
+            {
+                BuildId = buildIds[0];
+            }
         }
 
         internal void ExtractUEFI(string Output)
@@ -68,6 +75,13 @@ namespace UEFIReader
             Regex regex = new("[a-zA-Z/\\\\0-9_\\-\\.]*\\.dll\\b");
             string[] results = regex.Matches(System.Text.Encoding.ASCII.GetString(Data)).Select(x => x.Value).ToArray();
             return results.Select(s => NormalizeBuildPath(s)).ToArray();
+        }
+
+        internal string[] TryGetBuildPath(byte[] Data)
+        {
+            Regex regex = new("QC_IMAGE_VERSION_STRING=[a-zA-Z/\\\\0-9_\\-\\.]*\\b");
+            string[] results = regex.Matches(System.Text.Encoding.ASCII.GetString(Data)).Select(x => x.Value).ToArray();
+            return results.Select(s => s.Replace("QC_IMAGE_VERSION_STRING=", "")).ToArray();
         }
 
         internal string NormalizeBuildPath(string path)
