@@ -102,7 +102,7 @@ namespace UEFIReader
                     }
 
                     string outputPath = "";
-                    string infPath = "";
+                    string moduleName = "";
                     string baseName = "";
 
                     var uis = element.SectionElements.Where(x => IsSectionWithUI(x)).ToArray();
@@ -112,9 +112,7 @@ namespace UEFIReader
                         string pathPart1 = filePathsForElement[0].Split(basePath)[1].Split("/DEBUG/")[0];
 
                         outputPath = string.Join("/", pathPart1.Split("/")[..^1]).Replace('/', Path.DirectorySeparatorChar);
-                        infPath = pathPart1.Split("/")[^1] + ".inf";
-
-                        baseName = pathPart1.Split("/")[^1];
+                        moduleName = pathPart1.Split("/")[^1];
 
                         if (uis.Length > 1)
                         {
@@ -123,6 +121,10 @@ namespace UEFIReader
                         else if (uis.Length == 1)
                         {
                             baseName = uis[0].Name;
+                        }
+                        else
+                        {
+                            baseName = moduleName;
                         }
                     }
                     else
@@ -133,9 +135,9 @@ namespace UEFIReader
                         }
                         else if (uis.Length == 1)
                         {
-                            baseName = uis[0].Name;
-                            outputPath = baseName;
-                            infPath = baseName + ".inf";
+                            moduleName = uis[0].Name;
+                            outputPath = moduleName;
+                            baseName = moduleName;
                         }
                     }
 
@@ -181,17 +183,17 @@ namespace UEFIReader
                         }
 
                         // TODO: Handle when there's more than one PE32/RAW/etc
-                        string outputFileName = $"{baseName}.{extension}";
+                        string outputFileName = $"{moduleName}.{extension}";
 
                         infoutput += $"\r\n   {type}|{outputFileName}|RELEASE";
 
                         File.WriteAllBytes(Path.Combine(combinedPath, outputFileName), item.DecompressedImage);
                     }
 
-                    File.WriteAllText(Path.Combine(combinedPath, infPath), infoutput);
+                    File.WriteAllText(Path.Combine(combinedPath, moduleName + ".inf"), infoutput);
 
-                    dxeLoadList.Add($"INF {Path.Combine(outputPath, infPath).Replace("\\", "/")}");
-                    dxeIncludeList.Add($"{Path.Combine(outputPath, infPath).Replace("\\", "/")}");
+                    dxeLoadList.Add($"INF {Path.Combine(outputPath, moduleName + ".inf").Replace("\\", "/")}");
+                    dxeIncludeList.Add($"{Path.Combine(outputPath, moduleName + ".inf").Replace("\\", "/")}");
                 }
                 else if (element.SectionElements.Any(x => IsSectionWithUI(x)))
                 {
@@ -346,7 +348,7 @@ namespace UEFIReader
                 Console.WriteLine("Unexpected: More than one dll path matched for binary. Is this illegal?");
             }
 
-            return results.Select(s => s.Replace("\\", "/").Replace("WIN", "LINUX")).ToArray();
+            return results.Select(s => s.Replace("\\", "/").Replace("WIN", "LINUX").Replace("/DEBUG_", "/RELEASE_")).ToArray();
         }
 
         internal EFI[] HandleVolumeImage(byte[] Input, UInt32 Offset)
@@ -390,7 +392,7 @@ namespace UEFIReader
 
                 (byte FileType, uint FileSize, Guid FileGuid) = ReadFileMetadata(Input, Offset);
 
-                if (Offset + FileSize > Input.Length)
+                if (Offset + FileSize > Input.Length || FileSize == 0)
                 {
                     return fileElements.ToArray();
                 }
@@ -521,7 +523,7 @@ namespace UEFIReader
 
                 (uint SectionSize, byte SectionType) = ReadSectionMetadata(Input, Offset);
 
-                if (Offset + SectionSize > Input.Length)
+                if (Offset + SectionSize > Input.Length || SectionSize == 0)
                 {
                     return fileElements.ToArray();
                 }
