@@ -176,6 +176,8 @@ namespace UEFIReader
                                        "\r\n" +
                                        "[Binaries.AARCH64]";
 
+                    bool hasDepex = false;
+
                     foreach (EFISection item in element.SectionElements)
                     {
                         if (item.Type == "UI")
@@ -192,6 +194,7 @@ namespace UEFIReader
                                 break;
                             case "DXE_DEPEX":
                                 extension = "depex";
+                                hasDepex = true;
                                 break;
                         }
 
@@ -207,10 +210,15 @@ namespace UEFIReader
                         File.WriteAllBytes(Path.Combine(combinedPath, outputFileName), item.DecompressedImage);
                     }
 
-                    infoutput += "\r\n\r\n" +
-                                 "[Depex]\r\n" +
-                                 "  TRUE\r\n" +
-                                 "# AUTOGEN ENDS\r\n" +
+                    infoutput += "\r\n\r\n";
+
+                    if (hasDepex)
+                    {
+                        infoutput += "[Depex]\r\n" +
+                                     "  TRUE\r\n";
+                    }
+
+                    infoutput += "# AUTOGEN ENDS\r\n" +
                                  "# ****************************************************************************\r\n";
 
                     File.WriteAllText(Path.Combine(combinedPath, moduleName + ".inf"), infoutput);
