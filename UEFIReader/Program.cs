@@ -4,14 +4,14 @@
     {
         private static void Main(string[] args)
         {
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Arcata.img", @"F:\TestUEFIReader\Arcata");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\BlackRock.img", @"F:\TestUEFIReader\BlackRock");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Cambria.img", @"F:\TestUEFIReader\Cambria");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Carina.img", @"F:\TestUEFIReader\Carina");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Epsilon.img", @"F:\TestUEFIReader\Epsilon");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Zeta.img", @"F:\TestUEFIReader\Zeta");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Caspar.img", @"F:\TestUEFIReader\Caspar");
-            ExtractQualcommUEFIImage(@"F:\TestUEFIReader\Sydney.img", @"F:\TestUEFIReader\Sydney");
+            if (args.Length == 2 && File.Exists(args[0]))
+            {
+                ExtractQualcommUEFIImage(args[0], args[1]);
+            }
+            else
+            {
+                Console.WriteLine("Usage: <Path to UEFI image/XBL image> <Output Directory>");
+            }
         }
 
         private static void ExtractQualcommUEFIImage(string UEFIPath, string Output)
