@@ -74,7 +74,7 @@ namespace UEFIReader
         {
             Regex regex = new("[a-zA-Z/\\\\0-9_\\-\\.]*\\.dll\\b");
             string[] results = regex.Matches(System.Text.Encoding.ASCII.GetString(Data)).Select(x => x.Value).ToArray();
-            return results.Select(s => NormalizeBuildPath(s)).ToArray();
+            return results.Select(s => NormalizeBuildPath(s)).Where(s => s.Count(x => x == '/') > 1).ToArray();
         }
 
         internal string[] TryGetBuildPath(byte[] Data)
@@ -86,7 +86,18 @@ namespace UEFIReader
 
         internal string NormalizeBuildPath(string path)
         {
-            return path.Replace("\\", "/").Split("/AARCH64/")[^1];
+            if (path.Contains("ARM"))
+            {
+                return path.Replace("\\", "/").Split("/ARM/")[^1];
+            }
+            else if (path.Contains("AARCH64"))
+            {
+                return path.Replace("\\", "/").Split("/AARCH64/")[^1];
+            }
+            else
+            {
+                return path.Replace("\\", "/");
+            }
         }
 
         internal void ExtractDXEs(string Output)
@@ -240,13 +251,16 @@ namespace UEFIReader
                         if (section.Type == "RAW")
                         {
                             string combinedPath = Path.Combine(Output, "RawFiles");
-                            if (!Directory.Exists(combinedPath))
+                            string realFileName = fileName.Replace(" ", "_").Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+                            string filedst = Path.Combine(combinedPath, realFileName);
+
+                            if (!Directory.Exists(Path.GetDirectoryName(filedst)))
                             {
-                                _ = Directory.CreateDirectory(combinedPath);
+                                _ = Directory.CreateDirectory(Path.GetDirectoryName(filedst));
                             }
 
-                            File.WriteAllBytes(Path.Combine(combinedPath, fileName.Replace(" ", "_")), section.DecompressedImage);
-                            dxeLoadList.Add($"    SECTION {section.Type} = RawFiles/{el.Replace(" ", "_")}");
+                            File.WriteAllBytes(Path.Combine(combinedPath, filedst), section.DecompressedImage);
+                            dxeLoadList.Add($"    SECTION {section.Type} = RawFiles/{fileName.Replace(" ", "_").Replace('\\', '/')}");
                         }
                         else if (section.Type == "UI")
                         {
