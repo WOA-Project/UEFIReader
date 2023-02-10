@@ -259,7 +259,7 @@ namespace UEFIReader
                                 _ = Directory.CreateDirectory(Path.GetDirectoryName(filedst));
                             }
 
-                            File.WriteAllBytes(Path.Combine(combinedPath, filedst), section.DecompressedImage);
+                            File.WriteAllBytes(filedst, section.DecompressedImage);
                             dxeLoadList.Add($"    SECTION {section.Type} = RawFiles/{fileName.Replace(" ", "_").Replace('\\', '/')}");
                         }
                         else if (section.Type == "UI")
