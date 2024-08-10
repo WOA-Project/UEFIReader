@@ -689,7 +689,8 @@ namespace UEFIReader
             uint CompressedSubImageSize = SectionSize - SectionHeaderSize;
 
             // DECOMPRESS HERE
-            if (SectionGuid == new Guid("EE4E5898-3914-4259-9D6E-DC7BD79403CF"))
+            if (SectionGuid == new Guid("EE4E5898-3914-4259-9D6E-DC7BD79403CF") ||
+                SectionGuid == new Guid("bd9921ea-ed91-404a-8b2f-b4d724747c8c"))
             {
                 // LZMA
                 DecompressedImage = LZMA.Decompress(Input, CompressedSubImageOffset, CompressedSubImageSize);
