@@ -29,7 +29,7 @@ namespace UEFIReader
 {
     internal static class LZMA
     {
-        internal static byte[] Decompress(byte[] Input, uint Offset, uint InputSize)
+        internal static byte[] Decompress(byte[] Input, ulong Offset, ulong InputSize)
         {
             byte[] Properties = new byte[5];
             Buffer.BlockCopy(Input, (int)Offset, Properties, 0, 5);
@@ -53,7 +53,7 @@ namespace UEFIReader
             return Output;
         }
 
-        internal static byte[] Compress(byte[] Input, uint Offset, uint InputSize)
+        internal static byte[] Compress(byte[] Input, ulong Offset, ulong InputSize)
         {
             SevenZip.Compression.LZMA.Encoder Coder = new();
 
@@ -67,7 +67,7 @@ namespace UEFIReader
             OutStream.Write(BitConverter.GetBytes(InStream.Length), 0, 8);
 
             // Encode the file
-            Coder.Code(InStream, OutStream, InputSize, -1, null);
+            Coder.Code(InStream, OutStream, (long)InputSize, -1, null);
 
             byte[] Output = new byte[OutStream.Length];
             Buffer.BlockCopy(OutStream.GetBuffer(), 0, Output, 0, (int)OutStream.Length);

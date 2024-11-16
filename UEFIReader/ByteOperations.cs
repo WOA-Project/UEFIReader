@@ -24,21 +24,21 @@ namespace UEFIReader
 {
     internal static class ByteOperations
     {
-        internal static string ReadAsciiString(byte[] ByteArray, uint Offset, uint Length)
+        internal static string ReadAsciiString(byte[] ByteArray, ulong Offset, uint Length)
         {
             byte[] Bytes = new byte[Length];
             Buffer.BlockCopy(ByteArray, (int)Offset, Bytes, 0, (int)Length);
             return System.Text.Encoding.ASCII.GetString(Bytes);
         }
 
-        internal static string ReadUnicodeString(byte[] ByteArray, uint Offset, uint Length)
+        internal static string ReadUnicodeString(byte[] ByteArray, ulong Offset, uint Length)
         {
             byte[] Bytes = new byte[Length];
             Buffer.BlockCopy(ByteArray, (int)Offset, Bytes, 0, (int)Length);
             return System.Text.Encoding.Unicode.GetString(Bytes);
         }
 
-        internal static void WriteAsciiString(byte[] ByteArray, uint Offset, string Text, uint? MaxBufferLength = null)
+        internal static void WriteAsciiString(byte[] ByteArray, ulong Offset, string Text, uint? MaxBufferLength = null)
         {
             if (MaxBufferLength != null)
             {
@@ -55,7 +55,7 @@ namespace UEFIReader
             Buffer.BlockCopy(TextBytes, 0, ByteArray, (int)Offset, WriteLength);
         }
 
-        internal static void WriteUnicodeString(byte[] ByteArray, uint Offset, string Text, uint? MaxBufferLength = null)
+        internal static void WriteUnicodeString(byte[] ByteArray, ulong Offset, string Text, uint? MaxBufferLength = null)
         {
             if (MaxBufferLength != null)
             {
@@ -72,89 +72,94 @@ namespace UEFIReader
             Buffer.BlockCopy(TextBytes, 0, ByteArray, (int)Offset, WriteLength);
         }
 
-        internal static uint ReadUInt32(byte[] ByteArray, uint Offset)
+        internal static uint ReadUInt32(byte[] ByteArray, ulong Offset)
         {
             return BitConverter.ToUInt32(ByteArray, (int)Offset);
         }
 
-        internal static void WriteUInt32(byte[] ByteArray, uint Offset, uint Value)
+        internal static void WriteUInt32(byte[] ByteArray, ulong Offset, uint Value)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 4);
         }
 
-        internal static int ReadInt32(byte[] ByteArray, uint Offset)
+        internal static int ReadInt32(byte[] ByteArray, ulong Offset)
         {
             return BitConverter.ToInt32(ByteArray, (int)Offset);
         }
 
-        internal static void WriteInt32(byte[] ByteArray, uint Offset, int Value)
+        internal static void WriteInt32(byte[] ByteArray, ulong Offset, int Value)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 4);
         }
 
-        internal static ushort ReadUInt16(byte[] ByteArray, uint Offset)
+        internal static ushort ReadUInt16(byte[] ByteArray, ulong Offset)
         {
             return BitConverter.ToUInt16(ByteArray, (int)Offset);
         }
 
-        internal static void WriteUInt16(byte[] ByteArray, uint Offset, ushort Value)
+        internal static void WriteUInt16(byte[] ByteArray, ulong Offset, ushort Value)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 2);
         }
 
-        internal static short ReadInt16(byte[] ByteArray, uint Offset)
+        internal static short ReadInt16(byte[] ByteArray, ulong Offset)
         {
             return BitConverter.ToInt16(ByteArray, (int)Offset);
         }
 
-        internal static void WriteInt16(byte[] ByteArray, uint Offset, short Value)
+        internal static void WriteInt16(byte[] ByteArray, ulong Offset, short Value)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 2);
         }
 
-        internal static byte ReadUInt8(byte[] ByteArray, uint Offset)
+        internal static byte ReadUInt8(byte[] ByteArray, ulong Offset)
         {
             return ByteArray[Offset];
         }
 
-        internal static void WriteUInt8(byte[] ByteArray, uint Offset, byte Value)
+        internal static void WriteUInt8(byte[] ByteArray, ulong Offset, byte Value)
         {
             ByteArray[Offset] = Value;
         }
 
-        internal static uint ReadUInt24(byte[] ByteArray, uint Offset)
+        internal static uint ReadUInt24(byte[] ByteArray, ulong Offset)
         {
             return (uint)(ByteArray[Offset] + (ByteArray[Offset + 1] << 8) + (ByteArray[Offset + 2] << 16));
         }
 
-        internal static void WriteUInt24(byte[] ByteArray, uint Offset, uint Value)
+        internal static void WriteUInt24(byte[] ByteArray, ulong Offset, uint Value)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 3);
         }
 
-        internal static ulong ReadUInt64(byte[] ByteArray, uint Offset)
+        internal static ulong ReadUInt64(byte[] ByteArray, ulong Offset)
         {
             return BitConverter.ToUInt64(ByteArray, (int)Offset);
         }
 
-        internal static void WriteUInt64(byte[] ByteArray, uint Offset, ulong Value)
+        internal static void WriteUInt64(byte[] ByteArray, ulong Offset, ulong Value)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(Value), 0, ByteArray, (int)Offset, 8);
         }
 
-        internal static Guid ReadGuid(byte[] ByteArray, uint Offset)
+        internal static Guid ReadGuid(byte[] ByteArray, ulong Offset)
         {
             byte[] GuidBuffer = new byte[0x10];
             Buffer.BlockCopy(ByteArray, (int)Offset, GuidBuffer, 0, 0x10);
             return new Guid(GuidBuffer);
         }
 
-        internal static void WriteGuid(byte[] ByteArray, uint Offset, Guid Value)
+        internal static void WriteGuid(byte[] ByteArray, ulong Offset, Guid Value)
         {
             Buffer.BlockCopy(Value.ToByteArray(), 0, ByteArray, (int)Offset, 0x10);
         }
 
         internal static uint Align(uint Base, uint Offset, uint Alignment)
+        {
+            return ((Offset - Base) % Alignment) == 0 ? Offset : ((((Offset - Base) / Alignment) + 1) * Alignment) + Base;
+        }
+
+        internal static ulong Align(ulong Base, ulong Offset, ulong Alignment)
         {
             return ((Offset - Base) % Alignment) == 0 ? Offset : ((((Offset - Base) / Alignment) + 1) * Alignment) + Base;
         }
@@ -295,11 +300,11 @@ namespace UEFIReader
             return Result;
         }
 
-        internal static byte CalculateChecksum8(byte[] Buffer, uint Offset, uint Size)
+        internal static byte CalculateChecksum8(byte[] Buffer, ulong Offset, ulong Size)
         {
             byte Checksum = 0;
 
-            for (uint i = Offset; i < (Offset + Size); i++)
+            for (ulong i = Offset; i < (Offset + Size); i++)
             {
                 Checksum += Buffer[i];
             }
@@ -307,11 +312,11 @@ namespace UEFIReader
             return (byte)(0x100 - Checksum);
         }
 
-        internal static ushort CalculateChecksum16(byte[] Buffer, uint Offset, uint Size)
+        internal static ushort CalculateChecksum16(byte[] Buffer, ulong Offset, ulong Size)
         {
             ushort Checksum = 0;
 
-            for (uint i = Offset; i < (Offset + Size - 1); i += 2)
+            for (ulong i = Offset; i < (Offset + Size - 1); i += 2)
             {
                 Checksum += BitConverter.ToUInt16(Buffer, (int)i);
             }
@@ -365,9 +370,9 @@ namespace UEFIReader
             0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
         };
 
-        internal static uint CRC32(byte[] Input, uint Offset, uint Length)
+        internal static uint CRC32(byte[] Input, ulong Offset, ulong Length)
         {
-            if ((Input == null) || ((Offset + Length) > Input.Length))
+            if ((Input == null) || ((long)(Offset + Length) > Input.LongLength))
             {
                 throw new ArgumentException();
             }
@@ -375,7 +380,7 @@ namespace UEFIReader
             unchecked
             {
                 uint crc = (uint)(((uint)0) ^ (-1));
-                for (uint i = Offset; i < (Offset + Length); i++)
+                for (ulong i = Offset; i < (Offset + Length); i++)
                 {
                     crc = (crc >> 8) ^ CRC32Table[(crc ^ Input[i]) & 0xFF];
                 }

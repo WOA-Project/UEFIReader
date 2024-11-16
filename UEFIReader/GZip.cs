@@ -24,7 +24,7 @@ namespace UEFIReader
 {
     internal static class GZip
     {
-        internal static byte[] Decompress(byte[] Input, uint Offset, uint InputSize)
+        internal static byte[] Decompress(byte[] Input, ulong Offset, ulong InputSize)
         {
             MemoryStream InStream = new(Input, (int)Offset, (int)InputSize);
             MemoryStream OutStream = new();
@@ -44,7 +44,7 @@ namespace UEFIReader
             return Output;
         }
 
-        internal static byte[] Compress(byte[] Input, uint Offset, uint InputSize)
+        internal static byte[] Compress(byte[] Input, ulong Offset, ulong InputSize)
         {
             MemoryStream InStream = new(Input, (int)Offset, (int)InputSize);
             MemoryStream OutStream = new();

@@ -220,8 +220,8 @@ namespace UEFIReader
                         File.WriteAllBytes(Path.Combine(combinedPath, outputFileName), item.DecompressedImage);
                     }
 
-                    infoutput += "\r\n" + 
-                                 "\r\n" + 
+                    infoutput += "\r\n" +
+                                 "\r\n" +
                                  (hasDepex ? "[Depex]\r\n" +
                                              "  TRUE\r\n" : "") +
                                  "# AUTOGEN ENDS\r\n" +
@@ -269,6 +269,27 @@ namespace UEFIReader
                     }
                     dxeLoadList.Add("}");
                     dxeLoadList.Add("");
+                }
+                else
+                {
+                    string fileName = element.Guid.ToString();
+
+                    foreach (EFISection section in element.SectionElements)
+                    {
+                        if (section.Type == "RAW")
+                        {
+                            string combinedPath = Path.Combine(Output, "RawFiles");
+                            string realFileName = fileName.Replace(" ", "_").Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+                            string filedst = Path.Combine(combinedPath, realFileName);
+
+                            if (!Directory.Exists(Path.GetDirectoryName(filedst)))
+                            {
+                                _ = Directory.CreateDirectory(Path.GetDirectoryName(filedst));
+                            }
+
+                            File.WriteAllBytes(filedst, section.DecompressedImage);
+                        }
+                    }
                 }
             }
 
@@ -376,7 +397,7 @@ namespace UEFIReader
             return HandleFileLoop(buffer, 0, FileHeaderOffset);
         }
 
-        internal EFI[] HandleFileLoop(byte[] Input, uint Offset, uint Base)
+        internal EFI[] HandleFileLoop(byte[] Input, ulong Offset, ulong Base)
         {
             List<EFI> fileElements = new();
 
@@ -387,15 +408,15 @@ namespace UEFIReader
 
             do
             {
-                if (Offset + 0x18 > Input.Length)
+                if ((long)Offset + 0x18 > Input.LongLength)
                 {
                     //throw new BadImageFormatException();
                     return fileElements.ToArray();
                 }
 
-                (byte FileType, uint FileSize, Guid FileGuid) = ReadFileMetadata(Input, Offset);
+                (byte FileType, ulong FileSize, uint FileHeaderSize, Guid FileGuid) = ReadFileMetadata(Input, Offset);
 
-                if (Offset + FileSize > Input.Length || FileSize == 0)
+                if ((long)Offset + (long)FileSize > Input.LongLength || FileSize == 0)
                 {
                     //throw new BadImageFormatException();
                     return fileElements.ToArray();
@@ -403,16 +424,26 @@ namespace UEFIReader
 
                 switch (FileType)
                 {
+                    case 0x01: // EFI_FV_FILETYPE_RAW
+                        {
+                            Debug.WriteLine("EFI_FV_FILETYPE_RAW");
+
+                            byte[] buffer = new byte[FileSize - FileHeaderSize];
+                            Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
+
+                            fileElements.Add(new() { Type = "RAW", Guid = FileGuid, SectionElements = [new() { Name = FileGuid.ToString(), Type = "RAW", DecompressedImage = buffer }] });
+                            break;
+                        }
                     case 0x02: // EFI_FV_FILETYPE_FREEFORM
                         {
                             if (FileGuid == new Guid("FC510EE7-FFDC-11D4-BD41-0080C73C8881"))
                             {
                                 Debug.WriteLine("EFI_FV_FILETYPE_DXE_APRIORI");
 
-                                byte[] buffer = new byte[FileSize - 0x18];
-                                Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                                byte[] buffer = new byte[FileSize - FileHeaderSize];
+                                Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                                EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                                EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
 
                                 if (elements.Count() > 0 && elements[0].Type == "RAW")
                                 {
@@ -428,10 +459,10 @@ namespace UEFIReader
                             {
                                 Debug.WriteLine("EFI_FV_FILETYPE_FREEFORM");
 
-                                byte[] buffer = new byte[FileSize - 0x18];
-                                Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                                byte[] buffer = new byte[FileSize - FileHeaderSize];
+                                Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                                EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                                EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
                                 fileElements.Add(new() { Type = "FREEFORM", Guid = FileGuid, SectionElements = elements });
                             }
 
@@ -441,10 +472,10 @@ namespace UEFIReader
                         {
                             Debug.WriteLine("EFI_FV_FILETYPE_SECURITY_CORE");
 
-                            byte[] buffer = new byte[FileSize - 0x18];
-                            Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                            byte[] buffer = new byte[FileSize - FileHeaderSize];
+                            Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
                             fileElements.Add(new() { Type = "SECURITY_CORE", Guid = FileGuid, SectionElements = elements });
 
                             break;
@@ -453,10 +484,10 @@ namespace UEFIReader
                         {
                             Debug.WriteLine("EFI_FV_FILETYPE_DXE_CORE");
 
-                            byte[] buffer = new byte[FileSize - 0x18];
-                            Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                            byte[] buffer = new byte[FileSize - FileHeaderSize];
+                            Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
                             fileElements.Add(new() { Type = "DXE_CORE", Guid = FileGuid, SectionElements = elements });
 
                             break;
@@ -465,10 +496,10 @@ namespace UEFIReader
                         {
                             Debug.WriteLine("EFI_FV_FILETYPE_DRIVER");
 
-                            byte[] buffer = new byte[FileSize - 0x18];
-                            Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                            byte[] buffer = new byte[FileSize - FileHeaderSize];
+                            Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
                             fileElements.Add(new() { Type = "DRIVER", Guid = FileGuid, SectionElements = elements });
 
                             break;
@@ -477,10 +508,10 @@ namespace UEFIReader
                         {
                             Debug.WriteLine("EFI_FV_FILETYPE_APPLICATION");
 
-                            byte[] buffer = new byte[FileSize - 0x18];
-                            Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                            byte[] buffer = new byte[FileSize - FileHeaderSize];
+                            Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
                             fileElements.Add(new() { Type = "APPLICATION", Guid = FileGuid, SectionElements = elements });
 
                             break;
@@ -489,10 +520,10 @@ namespace UEFIReader
                         {
                             Debug.WriteLine("EFI_FV_FILETYPE_FIRMWARE_VOLUME_IMAGE");
 
-                            byte[] buffer = new byte[FileSize - 0x18];
-                            Buffer.BlockCopy(Input, (int)Offset + 0x18, buffer, 0, buffer.Length);
+                            byte[] buffer = new byte[FileSize - FileHeaderSize];
+                            Buffer.BlockCopy(Input, (int)(Offset + FileHeaderSize), buffer, 0, buffer.Length);
 
-                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + 0x18);
+                            EFISection[] elements = HandleSectionLoop(buffer, 0, Offset + FileHeaderSize);
                             foreach (EFISection element in elements)
                             {
                                 if (element.Type == "FV")
@@ -526,12 +557,12 @@ namespace UEFIReader
                 // so that alignment can be ignored.
                 Offset = ByteOperations.Align(Base, Offset, 8);
             }
-            while (Offset < Input.Length);
+            while ((long)Offset < Input.LongLength);
 
             return fileElements.ToArray();
         }
 
-        internal byte[] ReadSectionDataBuffer(byte[] Input, uint Offset)
+        internal byte[] ReadSectionDataBuffer(byte[] Input, ulong Offset)
         {
             (uint SectionSize, _) = ReadSectionMetadata(Input, Offset);
 
@@ -541,20 +572,20 @@ namespace UEFIReader
             return buffer;
         }
 
-        internal EFISection[] HandleSectionLoop(byte[] Input, uint Offset, uint Base)
+        internal EFISection[] HandleSectionLoop(byte[] Input, ulong Offset, ulong Base)
         {
             List<EFISection> fileElements = new();
 
             do
             {
-                if (Offset + 0x04 > Input.Length)
+                if ((long)Offset + 0x04 > Input.LongLength)
                 {
                     throw new BadImageFormatException();
                 }
 
                 (uint SectionSize, byte SectionType) = ReadSectionMetadata(Input, Offset);
 
-                if (Offset + SectionSize > Input.Length || SectionSize == 0)
+                if ((long)Offset + SectionSize > Input.LongLength || SectionSize == 0)
                 {
                     throw new BadImageFormatException();
                 }
@@ -643,12 +674,12 @@ namespace UEFIReader
                 // Offset must be Align 4
                 Offset = ByteOperations.Align(Base, Offset, 4);
             }
-            while (Offset < Input.Length);
+            while ((long)Offset < Input.LongLength);
 
             return fileElements.ToArray();
         }
 
-        internal (uint SectionSize, byte SectionType) ReadSectionMetadata(byte[] Input, uint Offset)
+        internal (uint SectionSize, byte SectionType) ReadSectionMetadata(byte[] Input, ulong Offset)
         {
             uint SectionSize = ByteOperations.ReadUInt24(Input, Offset + 0x00);
             byte SectionType = ByteOperations.ReadUInt8(Input, Offset + 0x03);
@@ -656,19 +687,28 @@ namespace UEFIReader
             return (SectionSize, SectionType);
         }
 
-        internal (byte FileType, uint FileSize, Guid FileGuid) ReadFileMetadata(byte[] Input, uint Offset)
+        internal (byte FileType, ulong FileSize, uint FileHeaderSize, Guid FileGuid) ReadFileMetadata(byte[] Input, ulong Offset)
         {
             byte[] FileGuidBytes = new byte[0x10];
             Buffer.BlockCopy(Input, (int)Offset + 0x00, FileGuidBytes, 0, 0x10);
             Guid FileGuid = new(FileGuidBytes);
 
+            byte DataChecksum = ByteOperations.ReadUInt8(Input, Offset + 0x11);
             byte FileType = ByteOperations.ReadUInt8(Input, Offset + 0x12);
-            uint FileSize = ByteOperations.ReadUInt24(Input, Offset + 0x14);
+            byte Attributes = ByteOperations.ReadUInt8(Input, Offset + 0x13);
+            ulong FileSize = ByteOperations.ReadUInt24(Input, Offset + 0x14);
+            uint FileHeaderSize = 0x18;
 
-            return (FileType, FileSize, FileGuid);
+            if (Attributes == 0x41)
+            {
+                FileSize = ByteOperations.ReadUInt64(Input, Offset + 0x18);
+                FileHeaderSize = 0x20;
+            }
+
+            return (FileType, FileSize, FileHeaderSize, FileGuid);
         }
 
-        internal EFISection[] ParseGuidDefinedSection(byte[] Input, uint Offset, uint Base)
+        internal EFISection[] ParseGuidDefinedSection(byte[] Input, ulong Offset, ulong Base)
         {
             byte[] DecompressedImage;
 
@@ -685,7 +725,7 @@ namespace UEFIReader
             Guid SectionGuid = new(SectionGuidBytes);
             ushort SectionHeaderSize = ByteOperations.ReadUInt16(Input, Offset + 0x14);
 
-            uint CompressedSubImageOffset = Offset + SectionHeaderSize;
+            ulong CompressedSubImageOffset = Offset + SectionHeaderSize;
             uint CompressedSubImageSize = SectionSize - SectionHeaderSize;
 
             // DECOMPRESS HERE
@@ -748,12 +788,19 @@ namespace UEFIReader
             return CurrentChecksum == NewChecksum;
         }
 
-        private bool VerifyFileChecksum(byte[] Image, uint Offset)
+        private bool VerifyFileChecksum(byte[] Image, ulong Offset)
         {
             // This function only checks fixed checksum-values 0x55 and 0xAA.
 
-            const ushort FileHeaderSize = 0x18;
-            uint FileSize = ByteOperations.ReadUInt24(Image, Offset + 0x14);
+            ushort FileHeaderSize = 0x18;
+            byte Attributes = ByteOperations.ReadUInt8(Image, Offset + 0x11);
+            ulong FileSize = ByteOperations.ReadUInt24(Image, Offset + 0x14);
+
+            if (Attributes == 0x41)
+            {
+                FileSize = ByteOperations.ReadUInt64(Image, Offset + 0x18);
+                FileHeaderSize = 0x20;
+            }
 
             byte[] Header = new byte[FileHeaderSize - 1];
             Buffer.BlockCopy(Image, (int)Offset, Header, 0, FileHeaderSize - 1);
