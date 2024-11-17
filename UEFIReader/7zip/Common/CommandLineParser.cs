@@ -46,7 +46,7 @@ namespace SevenZip.CommandLineParser
     {
         public bool ThereIs;
         public bool WithMinus;
-        public ArrayList PostStrings = new();
+        public ArrayList PostStrings = [];
         public int PostCharIndex;
         public SwitchResult()
         {
@@ -56,7 +56,7 @@ namespace SevenZip.CommandLineParser
 
     public class Parser
     {
-        public ArrayList NonSwitchStrings = new();
+        public ArrayList NonSwitchStrings = [];
         private readonly SwitchResult[] _switches;
 
         public Parser(int numSwitches)
